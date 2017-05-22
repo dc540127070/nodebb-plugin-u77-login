@@ -1,0 +1,16 @@
+{
+    "id": "nodebb-plugin-u77-login",
+    "name": "NodeBB U77 LOGIN",
+    "description": "NodeBB U77 LOGIN",
+    "url": "https://github.com/dc540127070/nodebb-plugin-u77-login.git",
+    "library": "./library.js",
+    "hooks": [
+        {
+            "hook": "static:app.load",
+            "method": "init"
+        },
+        {"hook":"filter:auth.init","method":"getStrategy"},
+        {"hook": "filter:auth.list", "method": "getAssociation" },
+        {"hook": "filter:user.delete", "method": "deleteUserData" }
+    ]
+}
