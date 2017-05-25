@@ -73,27 +73,24 @@
 
         if(req&&req.uid){
             U77.bind(req.uid,u77id,function(err,user){
-               if(err){
+                if(err){
                     winston.error(err);
-                    return;
+                }else{
+                    authenticationController.doLogin(req, user.uid)
                 }
-                authenticationController.doLogin(req, user.uid,function(err,data){
-                    res.redirect("/");
-                });
+                res.redirect("/");
             })
             return;
         }
 
         if(u77id){
             U77.login(u77id, username,avatar ,function(err,user){
-
                 if(err){
                     winston.error(err);
-                    return;
+                }else{
+                    authenticationController.doLogin(req, user.uid)
                 }
-                authenticationController.doLogin(req, user.uid,function(err,data){
-                    res.redirect("/");
-                });
+                res.redirect("/");
             })
             return;
         }
@@ -142,11 +139,22 @@
 	};
 
     U77.bind = function(uid,u77id,callback){
-        User.setUserField(uid, 'u77id', u77id);
-        db.setObjectField('u77id:uid', u77id, uid);
+        U77.getUidByQQID(u77id, function(err, _uid) {
+            if (err) {
+                return callback(err);
+            }
+            
+            if (_uid !== null) {
+                // Existing User
+                return callback(new Error("already bound"));
+            } 
 
-        callback(null, {
-            uid: uid
+            User.setUserField(uid, 'u77id', u77id);
+            db.setObjectField('u77id:uid', u77id, uid);
+
+            callback(null, {
+                uid: uid
+            });
         });
     }
 
@@ -162,8 +170,8 @@
                     uid: uid
                 });
             } else {
-                // //为了放置可能导致的修改用户数据，结果重新建立了一个账户的问题，所以我们给他一个默认邮箱
-                let email = u77id+"@norelpy.u77.com";
+                // // //为了放置可能导致的修改用户数据，结果重新建立了一个账户的问题，所以我们给他一个默认邮箱
+                // let email = u77id+"@norelpy.u77.com";
 				// New User 
 				
 				/**
@@ -180,7 +188,7 @@
 				//End
 				
 				//From SSO-Twitter
-				User.create({username: username,email:email}, function (err, uid) {
+				User.create({username: username,email:""}, function (err, uid) {
 
                     if (err) {
 						return callback(err);
@@ -226,7 +234,7 @@
     // };
 
    U77.init = function(data, callback) {
-
+        
         data.router.get('/auth/u77', [] ,u77login);
 
         data.router.get('/auth/u77/callback', [] ,logincallback);
